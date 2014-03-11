@@ -8,8 +8,6 @@ class MapQuestSearch
   
   CITY = 'city'
   LAT_LONG = 'lat_long'
-  JSON = 'json'
-  XML = 'xml'
   ALLOWED_FORMATS = [:json, :xml, :html]
   @@_default_format = nil
   
@@ -26,8 +24,8 @@ class MapQuestSearch
   end
   
   def self.raw(search, format=nil, options={})
-    options[:format] = (format || MapQuestSearch.default_format)
-    mapquest_exec_search search, options
+    format ||= MapQuestSearch.default_format
+    mapquest_exec_search search, format, options
   end
   
   def city_lat_long(term, format, options={})
@@ -41,16 +39,15 @@ class MapQuestSearch
     "http://open.mapquestapi.com/nominatim/v1/search.php"
   end
   
-  def self.mapquest_exec_search(search, options={})
-    
-    options[:format] ||= MapQuestSearch.default_format
+  def self.mapquest_exec_search(search, format, options={})
+    options[:format] = format.to_s
     options[:q] = search
-    result = RestClient.get MapQuestSearch.mapquest_endpoint, options
+    result = RestClient.get MapQuestSearch.mapquest_endpoint, { params: options }
     
     case format
-    when 'json'
-      JSON.parse result.to_str
-    when 'xml'
+    when :json
+			JSON.parse(result.to_str)
+    when :xml
       REXML::Document.new result.to_str
     else
       result.to_str
