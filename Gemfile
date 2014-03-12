@@ -1,5 +1,4 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem 'rake'
-gem 'json'
-gem 'rest_client'
+# Specify your gem's dependencies in mapquestsearch.gemspec
+gemspec
