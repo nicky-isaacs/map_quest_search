@@ -1,6 +1,6 @@
 require "mapquestsearch/version"
-# require 'rest_client'
-# require 'json'
+require 'rest_client'
+require 'json'
 require 'rexml/document'
 
 module Mapquestsearch
