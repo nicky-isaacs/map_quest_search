@@ -8,13 +8,13 @@ class MapQuestSearch
   CITY = 'city'
   LAT_LONG = 'lat_long'
   ALLOWED_FORMATS = [:json, :xml, :html]
+  RETRY_COUNT = 5
   @@_default_format = nil
 
   #----------------------------
 
   def self.default_format
-    @@_default_format ||= :json
-    @@_default_format
+    @@_default_format || :json
   end
 
   def self.default_format=(format)
@@ -38,16 +38,31 @@ class MapQuestSearch
     "http://open.mapquestapi.com/nominatim/v1/search.php"
   end
 
+  def self.validate_format(format)
+    raise "Invalid format type: #{format.class.to_s}:#{format.to_s}" unless format.is_a? Symbol
+    raise "Invalid format option: #{format}" unless ALLOWED_FORMATS.include?(format)
+    true
+  end
+
   def self.mapquest_exec_search(search, format, options={})
+    validate_format format
     options[:format] = format.to_s
     options[:q] = search
-    result = RestClient.get MapQuestSearch.mapquest_endpoint, { params: options }
+
+
+    begin
+      result = RestClient.get MapQuestSearch.mapquest_endpoint, { params: options }
+    rescue
+      try_count ||= 0
+      try_count += 1
+      try_count > RETRY_COUNT ? (return nil) : retry
+    end
 
     case format
     when :json
-      JSON.parse(result.to_str)
+      return JSON.parse(result.to_str)
     when :xml
-      REXML::Document.new result.to_str
+      return REXML::Document.new result.to_str
     else
       result.to_str
     end
